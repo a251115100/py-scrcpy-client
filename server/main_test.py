@@ -1,5 +1,5 @@
-from db.database import get_db
-from db.models import add_user, get_users, update_user, delete_user
+from server.db.database import get_db
+from server.db.models import add_user, get_users, delete_user
 
 if __name__ == "__main__":
     db = next(get_db())
