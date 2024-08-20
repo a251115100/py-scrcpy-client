@@ -1,6 +1,8 @@
 import asyncio
+import time
 
 import cv2
+import nest_asyncio
 import numpy as np
 from adbutils import adb
 from fastapi import WebSocket
@@ -9,15 +11,12 @@ from starlette.websockets import WebSocketState
 import scrcpy
 from scrcpy import Client
 
+nest_asyncio.apply()
+
 
 def convert(frame: np.ndarray) -> bytes:
-    scale_percent = 50  # 缩小到原来的50%
-    width = int(frame.shape[1] * scale_percent / 100)
-    height = int(frame.shape[0] * scale_percent / 100)
-    dim = (width, height)
     origin_image = cv2.cvtColor(frame, cv2.COLOR_BGR2BGRA)
-    resized_image = cv2.resize(origin_image, dim, interpolation=cv2.INTER_AREA)
-    _, b_image = cv2.imencode('.jpg', resized_image, [cv2.IMWRITE_JPEG_QUALITY, 80])
+    _, b_image = cv2.imencode('.jpg', origin_image, [cv2.IMWRITE_JPEG_QUALITY, 70])
     return b_image.tobytes()
 
 
@@ -29,9 +28,11 @@ class DeviceManager:
         self.client = Client(
             device=adb.device(serial=serial),
             flip=False,
-            bitrate=100000,
+            bitrate=8000000,
             encoder_name=None,
-            max_fps=40
+            max_fps=20,
+            block_frame=True,
+            stay_awake=True
         )
         self.webSocket: WebSocket = None
         self.max_width = 480
@@ -41,7 +42,9 @@ class DeviceManager:
         self.width = None
         self.height = None
         self.last_frame = None
-        self.loop = asyncio.get_event_loop()
+        self.loop = asyncio.new_event_loop()
+        self.last_send_time = 0
+        # self.task = asyncio.create_task(self.send_bytes())
 
     def bind_web_socket(self, web_socket: WebSocket):
         self.webSocket = web_socket
@@ -63,10 +66,20 @@ class DeviceManager:
             return
         if self.webSocket.client_state != WebSocketState.CONNECTED:
             return
-        ratio = self.max_width / max(self.client.resolution)
         self.last_frame = frame
-        print("on_frame")
-        self.loop.run_until_complete(self.send_bytes())
+        current_time_ms = int(time.time() * 1000)
+        dif = current_time_ms - self.last_send_time
+        if dif > 40:
+            self.last_send_time = current_time_ms
+        else:
+            print("on_frame", dif)
+            return
+        # print("on_frame")
+        try:
+            self.loop.run_until_complete(self.send_bytes())
+        except Exception:
+            print(Exception)
+            self.last_frame = None
 
     def on_mouse_event(self, x: int, y: int, action=scrcpy.ACTION_DOWN):
         self.client.control.touch(x, y, action)
@@ -74,3 +87,6 @@ class DeviceManager:
     def start(self):
         self.client.stop()
         self.client.start(True, True)
+
+    def stop(self):
+        self.client.stop()
