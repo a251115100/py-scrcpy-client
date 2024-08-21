@@ -23,7 +23,6 @@ class LoginInfo(BaseModel):
 
 @router.post("/login")
 def login(params: LoginInfo):
-    logger.info(params)
     username = params.username
     password = params.password
     if len(username) == 0 or len(password) == 0:
@@ -33,34 +32,29 @@ def login(params: LoginInfo):
     user = login_user(session, username, password)
     if user is None:
         return resp_error("用户名或密码错误")
-    logger.info(user)
     return resp_success(user.json())
 
 
 @router.get("/app/devices")
 def devices(auth: str = Header(...)):
-    logger.info(auth)
-    success, user = auth_user(session, auth)
-    if success:
-        device_list = []
-        online_devices = query_online_devices()
-        logger.info(online_devices)
-        for d in user.devices:
-            state = ""
-            for online_d in online_devices:
-                logger.info(online_d.device_name)
-                if online_d.device_name == d.device_name:
-                    state = "device"
-            device_list.append({"device_name": d.device_name, "state": state})
-        return resp_success(device_list)
-    else:
+    user = auth_user(session, auth)
+    if user is None:
         return resp_auth_error()
+    device_list = []
+    online_devices = query_online_devices()
+    for d in user.devices:
+        state = ""
+        for online_d in online_devices:
+            if online_d.device_name == d.device_name:
+                state = "device"
+        device_list.append({"device_name": d.device_name, "state": state})
+    return resp_success(device_list)
 
 
 @router.get("/app/device")
 def device(name: str, auth: str = Header(...)):
-    success, user = auth_user(session, auth)
-    if success is False:
+    user = auth_user(session, auth)
+    if user is None:
         return resp_auth_error()
     if name is None or len(name) == 0:
         return resp_error("设备不能为空")
@@ -77,17 +71,10 @@ def device(name: str, auth: str = Header(...)):
     return resp_success(online_devices)
 
 
-# @router.get("/app/rebootDevice")
-# def reboot_device(auth: str = Header(...)):
-#     success, user = auth_user(session, auth)
-#     if success is False:
-#         return resp_auth_error()
-
-
 @router.get("/app/editPassword")
 def edit_password(password: str, auth: str = Header(...)):
-    success, user = auth_user(session, auth)
-    if success is False:
+    user = auth_user(session, auth)
+    if user is None:
         return resp_auth_error()
     if len(password) == 0:
         return resp_error('密码不能为空')

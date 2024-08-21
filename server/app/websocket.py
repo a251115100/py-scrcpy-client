@@ -28,7 +28,7 @@ async def websocket_endpoint(websocket: WebSocket):
             data = await websocket.receive_json()
             x = data["x"]
             y = data["y"]
-            action_type = data["type"]
+            action_type = data.get("type")
             print(data)
             action = None
             if action_type == "ACTION_DOWN":
@@ -37,7 +37,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 action = scrcpy.ACTION_MOVE
             if action_type == "ACTION_UP":
                 action = scrcpy.ACTION_UP
-            if action is not None:
+            if action:
                 device_manager.on_mouse_event(x, y, action)
     except WebSocketDisconnect:
         device_manager.stop()
