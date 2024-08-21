@@ -117,7 +117,7 @@ def update_user(db: Session, auth_token: str, password: str):
             print("update_user", "NONE")
             return "未查询到用户", None
         print("update_user", user.id, user.username)
-        user.password = password
+        user.password = md5(password)
         user.auth_token = str(uuid.uuid4())
         db.commit()
         db.refresh(user)

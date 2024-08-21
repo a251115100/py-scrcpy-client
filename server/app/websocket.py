@@ -10,10 +10,17 @@ router = APIRouter()
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
-    print("id", websocket.query_params.get("id"))
+    serial = websocket.query_params.get("id")
     devices = adb.device_list()
-    print("serial", devices[0].serial)
-    device_manager = DeviceManager(serial=devices[0].serial)
+    has_device = False
+    for d in devices:
+        if d.serial == serial:
+            has_device = True
+    if has_device is False:
+        await websocket.close(code=404, reason="设备未在线")
+        return
+    print("serial", serial)
+    device_manager = DeviceManager(serial=serial)
     device_manager.start()
     device_manager.bind_web_socket(websocket)
     try:

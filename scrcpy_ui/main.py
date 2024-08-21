@@ -88,6 +88,7 @@ class MainWindow(QMainWindow):
     def on_click_home(self):
         self.client.control.keycode(scrcpy.KEYCODE_HOME, scrcpy.ACTION_DOWN)
         self.client.control.keycode(scrcpy.KEYCODE_HOME, scrcpy.ACTION_UP)
+        self.client.device.reboot()
 
     def on_click_back(self):
         self.client.control.back_or_turn_screen_on(scrcpy.ACTION_DOWN)
