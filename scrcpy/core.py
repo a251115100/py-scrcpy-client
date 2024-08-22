@@ -1,4 +1,3 @@
-import asyncio
 import os
 import socket
 import struct
@@ -23,17 +22,17 @@ from .control import ControlSender
 
 class Client:
     def __init__(
-            self,
-            device: Optional[Union[AdbDevice, str, any]] = None,
-            max_width: int = 0,
-            bitrate: int = 8000000,
-            max_fps: int = 0,
-            flip: bool = False,
-            block_frame: bool = False,
-            stay_awake: bool = False,
-            lock_screen_orientation: int = LOCK_SCREEN_ORIENTATION_UNLOCKED,
-            connection_timeout: int = 3000,
-            encoder_name: Optional[str] = None,
+        self,
+        device: Optional[Union[AdbDevice, str, any]] = None,
+        max_width: int = 0,
+        bitrate: int = 8000000,
+        max_fps: int = 0,
+        flip: bool = False,
+        block_frame: bool = False,
+        stay_awake: bool = False,
+        lock_screen_orientation: int = LOCK_SCREEN_ORIENTATION_UNLOCKED,
+        connection_timeout: int = 3000,
+        encoder_name: Optional[str] = None,
     ):
         """
         Create a scrcpy client, this client won't be started until you call the start function
@@ -55,10 +54,10 @@ class Client:
         assert bitrate >= 0, "bitrate must be greater than or equal to 0"
         assert max_fps >= 0, "max_fps must be greater than or equal to 0"
         assert (
-                -1 <= lock_screen_orientation <= 3
+            -1 <= lock_screen_orientation <= 3
         ), "lock_screen_orientation must be LOCK_SCREEN_ORIENTATION_*"
         assert (
-                connection_timeout >= 0
+            connection_timeout >= 0
         ), "connection_timeout must be greater than or equal to 0"
         assert encoder_name in [
             None,
@@ -103,7 +102,6 @@ class Client:
 
         # Available if start with threaded or daemon_threaded
         self.stream_loop_thread = None
-        self.on_frame = None
 
     def __init_server_connection(self) -> None:
         """
@@ -145,14 +143,13 @@ class Client:
         server_file_path = os.path.join(
             os.path.abspath(os.path.dirname(__file__)), jar_name
         )
-        print(f"server_file_path:{server_file_path}")
         self.device.sync.push(server_file_path, f"/data/local/tmp/{jar_name}")
         commands = [
             f"CLASSPATH=/data/local/tmp/{jar_name}",
             "app_process",
             "/",
             "com.genymobile.scrcpy.Server",
-            "2.6.1",  # Scrcpy server version
+            "2.4",  # Scrcpy server version
             "log_level=info",
             f"max_size={self.max_width}",
             f"max_fps={self.max_fps}",
@@ -240,10 +237,7 @@ class Client:
                             frame = frame[:, ::-1, :]
                         self.last_frame = frame
                         self.resolution = (frame.shape[1], frame.shape[0])
-                        if self.on_frame:
-                            asyncio.run(self.on_frame(frame))
-                        else:
-                            self.__send_to_listeners(EVENT_FRAME, frame)
+                        self.__send_to_listeners(EVENT_FRAME, frame)
             except (BlockingIOError, InvalidDataError):
                 time.sleep(0.01)
                 if not self.block_frame:
