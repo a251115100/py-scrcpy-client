@@ -10,6 +10,7 @@ __pycache__/
 env/
 build/
 develop-eggs/
+dist/main
 downloads/
 eggs/
 .eggs/
@@ -31,7 +32,8 @@ var/
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
-
+.venv/
+venv/
 # Unit test / coverage reports
 htmlcov/
 .tox/
