@@ -45,3 +45,6 @@ Please check scrcpy server 1.20 source code: [Link](https://github.com/Genymobil
 - Core: [scrcpy](https://github.com/Genymobile/scrcpy)
 - Idea: [py-android-viewer](https://github.com/razumeiko/py-android-viewer)
 - CI: [index.py](https://github.com/index-py/index.py)
+
+
+## pyinstaller --onefile server/main.py
