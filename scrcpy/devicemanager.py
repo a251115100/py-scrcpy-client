@@ -84,6 +84,21 @@ class DeviceManager:
     def on_mouse_event(self, x: int, y: int, action=scrcpy.ACTION_DOWN):
         self.client.control.touch(x, y, action)
 
+    def key_event(self, action: str):
+        self.client.device.keyevent(action)
+
+    # def on_back(self):
+    #     self.client.device.keyevent("BACK")
+    #
+    # def on_home(self):
+    #     self.client.device.keyevent("HOME")
+    #
+    # def app_switch(self):
+    #     self.client.device.keyevent("APP_SWITCH")
+    #
+    # def on_reboot(self):
+    #     self.client.device.keyevent("HOME")
+
     def start(self):
         self.client.stop()
         self.client.start(True, True)

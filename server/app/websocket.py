@@ -1,3 +1,5 @@
+import logging
+
 from adbutils import adb
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
@@ -5,6 +7,8 @@ import scrcpy
 from scrcpy import DeviceManager
 
 router = APIRouter()
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 @router.websocket("/ws")
@@ -28,19 +32,20 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             data = await websocket.receive_json()
-            x = data["x"]
-            y = data["y"]
-            action_type = data["type"]
-            print(data)
-            action = None
-            if action_type == "ACTION_DOWN":
-                action = scrcpy.ACTION_DOWN
-            if action_type == "ACTION_MOVE":
-                action = scrcpy.ACTION_MOVE
-            if action_type == "ACTION_UP":
-                action = scrcpy.ACTION_UP
-            if action is not None:
-                device_manager.on_mouse_event(x, y, action)
+            if "type" in data:
+                action_type = data["type"]
+                action = None
+                if action_type == "ACTION_DOWN":
+                    action = scrcpy.ACTION_DOWN
+                if action_type == "ACTION_MOVE":
+                    action = scrcpy.ACTION_MOVE
+                if action_type == "ACTION_UP":
+                    action = scrcpy.ACTION_UP
+                if action is not None:
+                    device_manager.on_mouse_event(data["x"], data["y"], action)
+            if "action" in data:
+                device_manager.key_event(data["action"])
+                logging.info(data)
     except WebSocketDisconnect:
         device_manager.stop()
         # 处理连接断开
