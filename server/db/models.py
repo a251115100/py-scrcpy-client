@@ -159,7 +159,6 @@ def update_user(db: Session, auth_token: str, password: str) -> tuple[Optional[s
         return "密码不能为空", None
     if len(password) < 6:
         return "密码不能小于6位", None
-
     try:
         user = db.query(User).filter_by(auth_token=auth_token).first()
         if user is None or user.id is None:

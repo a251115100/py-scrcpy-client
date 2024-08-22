@@ -12,6 +12,7 @@ async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     serial = websocket.query_params.get("id")
     devices = adb.device_list()
+    # print(f"devices:{devices}")
     has_device = False
     for d in devices:
         if d.serial == serial:
@@ -19,17 +20,18 @@ async def websocket_endpoint(websocket: WebSocket):
     if has_device is False:
         await websocket.close(code=404, reason="设备未在线")
         return
-    print("serial", serial)
+    # print("serial", serial)
     device_manager = DeviceManager(serial=serial)
-    device_manager.start()
     device_manager.bind_web_socket(websocket)
+    device_manager.start()
+    # print("serial", serial)
     try:
         while True:
             data = await websocket.receive_json()
             x = data["x"]
             y = data["y"]
             action_type = data.get("type")
-            print(data)
+            print(f"data ${data} action_type:{action_type}", )
             action = None
             if action_type == "ACTION_DOWN":
                 action = scrcpy.ACTION_DOWN
