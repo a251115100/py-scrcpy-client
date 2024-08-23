@@ -15,8 +15,12 @@ nest_asyncio.apply()
 
 
 def convert(frame: np.ndarray) -> bytes:
-    origin_image = cv2.cvtColor(frame, cv2.COLOR_BGR2BGRA)
-    _, b_image = cv2.imencode('.jpg', origin_image, [cv2.IMWRITE_JPEG_QUALITY, 70])
+    height, width = frame.shape[:2]
+    new_width = int(width * 0.75)
+    new_height = int(height * 0.75)
+    # 缩小图像
+    resized_image = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
+    _, b_image = cv2.imencode('.webp', resized_image, [cv2.IMWRITE_WEBP_QUALITY, 50])
     return b_image.tobytes()
 
 
@@ -30,17 +34,13 @@ class DeviceManager:
             flip=False,
             bitrate=8000000,
             encoder_name=None,
-            max_fps=20,
+            max_fps=25,
             block_frame=True,
             stay_awake=True
         )
         self.webSocket: WebSocket = None
-        self.max_width = 480
         self.client.add_listener(scrcpy.EVENT_INIT, self.on_init)
         self.client.add_listener(scrcpy.EVENT_FRAME, self.on_frame)
-        self.ratio = None
-        self.width = None
-        self.height = None
         self.last_frame = None
         self.loop = asyncio.new_event_loop()
         self.last_send_time = 0
